@@ -1,0 +1,10 @@
+dbt_refactoring_practice:
+  target: demo # usually dev, prod, or test
+  outputs:
+    demo:
+      type: bigquery
+      method: oauth
+      project: formation-sql-316408
+      dataset: dbt_bleduc_refactoring
+      location: US
+      threads: 4
