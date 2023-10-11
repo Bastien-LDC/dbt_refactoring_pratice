@@ -14,6 +14,15 @@ payments AS(
 ),
 
 -- Logical CTEs
+completed_payments AS (
+    SELECT 
+        ORDERID AS order_id 
+      , max(CREATED) AS payment_finalized_date 
+      , sum(AMOUNT) / 100.0 AS total_amount_paid
+    FROM payments
+    WHERE STATUS <> 'fail'
+    GROUP BY 1
+),
 
 -- Final CTE
 
@@ -34,17 +43,11 @@ paid_orders AS (
     
     FROM orders 
 
-    LEFT JOIN (
-        SELECT 
-            ORDERID AS order_id, 
-            max(CREATED) AS payment_finalized_date, 
-            sum(AMOUNT) / 100.0 AS total_amount_paid
-        FROM payments
-        WHERE STATUS <> 'fail'
-        GROUP BY 1) p 
-        ON orders.ID = p.order_id
+    LEFT JOIN completed_payments p 
+    ON orders.ID = p.order_id
 
-    LEFT JOIN customers C ON orders.USER_ID = C.ID
+    LEFT JOIN customers C 
+    ON orders.USER_ID = C.ID
 ),
 
 customer_orders AS (
