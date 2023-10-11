@@ -9,19 +9,19 @@ WITH paid_orders AS (
     C.FIRST_NAME AS customer_first_name,
     C.LAST_NAME AS customer_last_name
     
-    FROM `dbt-tutorial`.jaffle_shop.orders AS Orders
+    FROM {{ source('jaffle_shop', 'orders') }} AS Orders
 
     LEFT JOIN (
         SELECT 
             ORDERID AS order_id, 
             max(CREATED) AS payment_finalized_date, 
             sum(AMOUNT) / 100.0 AS total_amount_paid
-        FROM `dbt-tutorial`.stripe.payment
+        FROM {{ source('stripe', 'payment') }}
         WHERE STATUS <> 'fail'
         GROUP BY 1) p 
         ON orders.ID = p.order_id
 
-    LEFT JOIN `dbt-tutorial`.jaffle_shop.customers C ON orders.USER_ID = C.ID
+    LEFT JOIN {{ source('jaffle_shop', 'customers') }} C ON orders.USER_ID = C.ID
 ),
 
 customer_orders AS (
@@ -31,9 +31,9 @@ customer_orders AS (
       , max(ORDER_DATE) AS most_recent_order_date
       , count(ORDERS.ID) AS number_of_orders
 
-    FROM `dbt-tutorial`.jaffle_shop.customers C 
+    FROM {{ source('jaffle_shop', 'customers') }} C 
 
-    LEFT JOIN `dbt-tutorial`.jaffle_shop.orders AS Orders
+    LEFT JOIN {{ source('jaffle_shop', 'orders') }} AS Orders
     ON orders.USER_ID = C.ID 
     GROUP BY 1
 )
