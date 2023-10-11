@@ -45,19 +45,6 @@ paid_orders AS (
     ON orders.user_id = customers.id
 ),
 
-customer_orders AS (
-    SELECT 
-        customers.id AS customer_id
-      , MIN(order_date) AS first_order_date
-      , MAX(order_date) AS most_recent_order_date
-      , COUNT(orders.id) AS number_of_orders
-
-    FROM customers 
-
-    LEFT JOIN orders
-    ON orders.user_id = customers.id 
-    GROUP BY 1
-),
 
 -- Final CTE
 final AS (
@@ -70,9 +57,13 @@ final AS (
 
         -- New vs Returning Customer
       , CASE 
-            WHEN customer_orders.first_order_date = paid_orders.order_placed_at
-            THEN 'new'
-            ELSE 'return' 
+            WHEN (
+            RANK() OVER (
+                PARTITION BY paid_orders.customer_id
+                ORDER BY paid_orders.order_placed_at, paid_orders.order_id
+            ) = 1
+            ) THEN 'new'
+        ELSE 'return' 
         END AS nvsr
 
         -- Customer Lifetime Value
@@ -81,16 +72,16 @@ final AS (
             ORDER BY paid_orders.order_placed_at
         ) AS customer_lifetime_value
         
-        -- first day of sales
-      , customer_orders.first_order_date AS fdos
+        -- first day of sale
+      , FIRST_VALUE(paid_orders.order_placed_at) OVER (
+            PARTITION BY paid_orders.customer_id
+            ORDER BY paid_orders.order_placed_at
+        ) AS fdos
 
     FROM paid_orders 
-
-    LEFT JOIN customer_orders USING (customer_id)
-
-    ORDER BY order_id
 )
 
 -- Simple SELECT statement
 
 SELECT * FROM final
+ORDER BY order_id
