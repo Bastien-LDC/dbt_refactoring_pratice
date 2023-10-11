@@ -1,27 +1,50 @@
-WITH paid_orders AS (
+WITH 
 
-    SELECT Orders.ID AS order_id,
-    Orders.USER_ID	AS customer_id,
-    Orders.ORDER_DATE AS order_placed_at,
-    Orders.STATUS AS order_status,
-    p.total_amount_paid,
-    p.payment_finalized_date,
-    C.FIRST_NAME AS customer_first_name,
-    C.LAST_NAME AS customer_last_name
+-- Import CTEs
+customers AS(
+    SELECT * FROM {{ source('jaffle_shop', 'customers') }}
+),
+
+orders AS(
+    SELECT * FROM {{ source('jaffle_shop', 'orders') }}
+),
+
+payments AS(
+    SELECT * FROM {{ source('stripe', 'payment') }}
+),
+
+-- Logical CTEs
+
+-- Final CTE
+
+-- Simple SELECT statement
+
+
+paid_orders AS (
+
+    SELECT 
+        orders.ID AS order_id,
+        orders.USER_ID	AS customer_id,
+        orders.ORDER_DATE AS order_placed_at,
+        orders.STATUS AS order_status,
+        p.total_amount_paid,
+        p.payment_finalized_date,
+        C.FIRST_NAME AS customer_first_name,
+        C.LAST_NAME AS customer_last_name
     
-    FROM {{ source('jaffle_shop', 'orders') }} AS Orders
+    FROM orders 
 
     LEFT JOIN (
         SELECT 
             ORDERID AS order_id, 
             max(CREATED) AS payment_finalized_date, 
             sum(AMOUNT) / 100.0 AS total_amount_paid
-        FROM {{ source('stripe', 'payment') }}
+        FROM payments
         WHERE STATUS <> 'fail'
         GROUP BY 1) p 
         ON orders.ID = p.order_id
 
-    LEFT JOIN {{ source('jaffle_shop', 'customers') }} C ON orders.USER_ID = C.ID
+    LEFT JOIN customers C ON orders.USER_ID = C.ID
 ),
 
 customer_orders AS (
@@ -31,9 +54,9 @@ customer_orders AS (
       , max(ORDER_DATE) AS most_recent_order_date
       , count(ORDERS.ID) AS number_of_orders
 
-    FROM {{ source('jaffle_shop', 'customers') }} C 
+    FROM customers C 
 
-    LEFT JOIN {{ source('jaffle_shop', 'orders') }} AS Orders
+    LEFT JOIN orders AS Orders
     ON orders.USER_ID = C.ID 
     GROUP BY 1
 )
@@ -73,8 +96,8 @@ LEFT OUTER JOIN (
 
     GROUP BY 1
     ORDER BY p.order_id
-
 ) x 
+
 ON x.order_id = p.order_id
 
 ORDER BY order_id
