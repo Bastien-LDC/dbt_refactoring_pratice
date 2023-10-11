@@ -2,23 +2,23 @@ WITH
 
 -- Import CTEs
 customers AS (
-    SELECT * FROM {{ source('jaffle_shop', 'customers') }}
+    SELECT * FROM {{ ref('stg_customers') }}
 ),
 
 orders AS (
-    SELECT * FROM {{ source('jaffle_shop', 'orders') }}
+    SELECT * FROM {{ ref('stg_orders') }}
 ),
 
 payments AS (
-    SELECT * FROM {{ source('stripe', 'payment') }}
+    SELECT * FROM {{ ref('stg_payments') }}
 ),
 
 -- Logical CTEs
 completed_payments AS (
     SELECT 
-        orderid AS order_id 
-      , MAX(created) AS payment_finalized_date 
-      , SUM(amount) / 100.0 AS total_amount_paid
+        order_id 
+      , MAX(created_at) AS payment_finalized_date 
+      , SUM(amount) AS total_amount_paid
     FROM payments
     WHERE status <> 'fail'
     GROUP BY 1
@@ -27,8 +27,8 @@ completed_payments AS (
 paid_orders AS (
 
     SELECT 
-        orders.id AS order_id
-      , orders.user_id	AS customer_id
+        orders.order_id
+      , orders.customer_id
       , orders.order_date AS order_placed_at
       , orders.status AS order_status
       , completed_payments.total_amount_paid
@@ -39,10 +39,10 @@ paid_orders AS (
     FROM orders 
 
     LEFT JOIN completed_payments
-    ON orders.id = completed_payments.order_id
+    ON orders.order_id = completed_payments.order_id
 
     LEFT JOIN customers 
-    ON orders.user_id = customers.id
+    ON orders.customer_id = customers.customer_id
 ),
 
 

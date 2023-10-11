@@ -1,0 +1,75 @@
+version: 2
+
+models:
+  # Stage
+  ## stg_customers
+  - name: stg_customers
+    description: Staged customer data from our jaffle shop app. This model cleans up customer data.
+    columns:
+      - name: customer_id
+        description: Primary key for customers.
+        tests:
+          - unique
+          - not_null
+      - name: first_name
+        description: First name of the customer.
+      - name: last_name
+        description: Initial of customer's last name.
+
+  ## stg_orders
+  - name: stg_orders
+    description: Staged order data from our jaffle shop app. This model cleans up order data.
+    columns:
+      - name: order_id
+        description: Primary key for orders.
+        tests:
+          - unique
+          - not_null
+      - name: order_date
+        description: Date of the order (YYY-MM-DD).
+      - name: status
+        description: '{{ doc("order_status") }}'
+        tests:
+          - accepted_values:
+              values: ['placed', 'shipped', 'completed', 'return_pending', 'returned']
+      - name: customer_id
+        description: Foreign key to stg_customers.customer_id.
+        tests:
+          - not_null
+          - relationships:
+              field: customer_id
+              to: ref('stg_customers')
+
+  ## stg_payments
+  - name: stg_payments
+    description: Staged payment data from our stripe app. This model cleans up payment data.
+    columns:
+      - name: payment_id
+        description: Primary key for the payments.
+        tests:
+          - unique
+          - not_null
+      - name: order_id
+        description: Foreign key to stg_orders.order_id
+        tests:
+          - not_null
+          - relationships:
+              field: order_id
+              to: ref('stg_orders')
+      - name: payment_method
+        description: '{{ doc("payment_method") }}'
+        tests:
+          - accepted_values:
+              values: ['credit_card', 'bank_transfer', 'coupon', 'gift_card']
+      - name: status
+        description: '{{ doc("payment_status") }}'
+        tests:
+          - accepted_values:
+              values: ['success', 'fail']
+      - name: amount
+        description: Payment amount in $. Can be negative if refund.
+      - name: created_at
+        description: Date of the transaction (YYY-MM-DD).
+
+      
+
