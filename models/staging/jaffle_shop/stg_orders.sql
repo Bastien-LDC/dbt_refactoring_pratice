@@ -8,6 +8,12 @@ staged AS (
       , user_id AS customer_id
       , order_date
       , status 
+
+      , CASE
+            WHEN status NOT IN ('returned', 'return_pending') 
+            THEN order_date
+        END AS valid_order_date
+
     FROM orders
 )
 SELECT * FROM staged

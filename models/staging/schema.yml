@@ -25,13 +25,6 @@ models:
         tests:
           - unique
           - not_null
-      - name: order_date
-        description: Date of the order (YYY-MM-DD).
-      - name: status
-        description: '{{ doc("order_status") }}'
-        tests:
-          - accepted_values:
-              values: ['placed', 'shipped', 'completed', 'return_pending', 'returned']
       - name: customer_id
         description: Foreign key to stg_customers.customer_id.
         tests:
@@ -39,6 +32,15 @@ models:
           - relationships:
               field: customer_id
               to: ref('stg_customers')
+      - name: order_date
+        description: Date of the order (YYY-MM-DD).
+      - name: status
+        description: '{{ doc("order_status") }}'
+        tests:
+          - accepted_values:
+              values: ['placed', 'shipped', 'completed', 'return_pending', 'returned']
+      - name: valid_order_date 
+        description: Marks the order_placed_at if order_status NOT IN ('returned', 'return_pending'), else NULL.
 
   ## stg_payments
   - name: stg_payments
