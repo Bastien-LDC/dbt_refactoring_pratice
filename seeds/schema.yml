@@ -1,0 +1,71 @@
+version: 2
+
+seeds:
+  # Customers
+  - name: customers
+    description: The raw customers data.
+    columns:
+      - name: id
+        description: Primary key of the raw customer data.
+        tests:
+          - unique
+          - not_null
+      - name: first_name
+        description: First name of the customer.
+      - name: last_name
+        description: Initial of customer's last name.
+
+  # Orders
+  - name: orders
+    description: The raw orders data.
+    columns:
+      - name: id
+        description: Primary key for orders.
+        tests:
+          - unique
+          - not_null
+      - name: order_date
+        description: Date of the order (YYY-MM-DD).
+      - name: status
+        description: '{{ doc("order_status") }}'
+        tests:
+          - accepted_values:
+              values: ['placed', 'shipped', 'completed', 'return_pending', 'returned']
+      - name: user_id
+        description: Foreign key to customers.id.
+        tests:
+          - not_null
+          - relationships:
+              field: id
+              to: ref('customers')
+
+  # Payments
+  - name: payments
+    description: The raw payments data.
+    columns:
+      - name: id
+        description: Primary key for the payments.
+        tests:
+          - unique
+          - not_null
+      - name: orderid
+        description: Foreign key to orders.id
+        tests:
+          - not_null
+          - relationships:
+              field: id
+              to: ref('orders')
+      - name: paymentmethod
+        description: '{{ doc("payment_method") }}'
+        tests:
+          - accepted_values:
+              values: ['credit_card', 'bank_transfer', 'coupon', 'gift_card']
+      - name: status
+        description: '{{ doc("payment_status") }}'
+        tests:
+          - accepted_values:
+              values: ['success', 'fail']
+      - name: amount
+        description: Payment amount in cents. Can be negative if refund.
+      - name: created
+        description: Date of the transaction (YYY-MM-DD).
