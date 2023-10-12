@@ -1,0 +1,46 @@
+version: 2
+
+models:
+  # Marts
+  ## fct_customers_orders
+  - name: fct_customer_orders
+    description: Contains the full information about the orders per customer. 
+    columns:
+      - name: order_id
+        description: Primary key for orders.
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        description: Foreign key to stg_customers.customer_id.
+        tests:
+          - not_null
+          - relationships:
+              field: customer_id
+              to: ref('stg_customers')
+      - name: order_placed_at
+        description: Date of the order (YYY-MM-DD)  
+      - name: order_status
+        description: '{{ doc("order_status") }}'
+        tests:
+          - accepted_values:
+              values: ['placed', 'shipped', 'completed', 'return_pending', 'returned']
+      - name: total_amount_paid
+        description: Payment amount in dollars. Single can be negative if refund.    
+      - name: payment_finalized_date
+        description: Date of the transaction (YYY-MM-DD).
+      - name: customer_first_name
+        description: First name of the customer.
+      - name: customer_last_name
+        description: Initial of customer's last name.
+      - name: transaction_seq
+        description: Sequence number of the overall transactions.
+      - name: customer_sales_seq
+        description: Sequence number of each sales per customer.
+      - name: nvsr
+        description: New vs Return customer - if the customer has more than one order, it will be marked as return.
+      - name: customer_lifetime_value
+        description: Sum of all the orders amount per customer up until the payment_finalized_date.
+      - name: fdos
+        description: First date of sales per customer.
+

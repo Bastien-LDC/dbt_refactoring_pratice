@@ -1,0 +1,44 @@
+version: 2
+
+models:
+  # Staging
+  ## stg_customers
+  - name: stg_customers
+    description: Staged customer data from our jaffle shop app. This model cleans up customer data.
+    columns:
+      - name: customer_id
+        description: Primary key for customers.
+        tests:
+          - unique
+          - not_null
+      - name: first_name
+        description: First name of the customer.
+      - name: last_name
+        description: Initial of customer's last name.
+
+  ## stg_orders
+  - name: stg_orders
+    description: Staged order data from our jaffle shop app. This model cleans up order data.
+    columns:
+      - name: order_id
+        description: Primary key for orders.
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        description: Foreign key to stg_customers.customer_id.
+        tests:
+          - not_null
+          - relationships:
+              field: customer_id
+              to: ref('stg_customers')
+      - name: order_date
+        description: Date of the order (YYY-MM-DD).
+      - name: status
+        description: '{{ doc("order_status") }}'
+        tests:
+          - accepted_values:
+              values: ['placed', 'shipped', 'completed', 'return_pending', 'returned']
+      - name: valid_order_date 
+        description: Marks the order_placed_at if order_status NOT IN ('returned', 'return_pending'), else NULL.
+

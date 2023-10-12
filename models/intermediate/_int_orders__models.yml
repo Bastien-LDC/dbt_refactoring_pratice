@@ -1,0 +1,30 @@
+version: 2
+
+models:
+  ## int_orders
+  - name: int_orders
+    description: Contain the amount of each order per customer with temporal information.
+    columns:
+      - name: order_id
+        description: Primary key for orders.
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        description: Foreign key to stg_customers.customer_id.
+        tests:
+          - not_null
+          - relationships:
+              field: customer_id
+              to: ref('stg_customers')
+      - name: order_placed_at
+        description: Date of the order (YYY-MM-DD)  
+      - name: order_status
+        description: '{{ doc("order_status") }}'
+        tests:
+          - accepted_values:
+              values: ['placed', 'shipped', 'completed', 'return_pending', 'returned']
+      - name: total_amount_paid
+        description: Payment amount in dollars. Single can be negative if refund.    
+      - name: payment_finalized_date
+        description: Date of the transaction (YYY-MM-DD).
